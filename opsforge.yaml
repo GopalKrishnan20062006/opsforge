@@ -1,0 +1,13 @@
+service:
+  name: sample-service
+  version: 1.0.0
+
+docker:
+  image: sample-service
+  container: sample-container
+
+deployment:
+  port: 8000
+
+health:
+  endpoint: /health

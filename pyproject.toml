@@ -1,0 +1,17 @@
+[project]
+name = "opsforge"
+version = "0.1.0"
+
+dependencies = [
+    "typer"
+]
+
+[project.scripts]
+opsforge = "opsforge.cli:app"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["opsforge"]

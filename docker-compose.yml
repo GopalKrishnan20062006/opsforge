@@ -1,0 +1,7 @@
+services:
+  sample-service:
+    build: .
+    container_name: sample-container
+
+    ports:
+      - "8000:8000"

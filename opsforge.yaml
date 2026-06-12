@@ -1,6 +1,7 @@
 service:
   name: sample-service
   version: 1.0.0
+  source_path: sample_service
 
 docker:
   image: sample-service
@@ -11,3 +12,6 @@ deployment:
 
 health:
   endpoint: /health
+
+environment:
+  APP_ENV: dev

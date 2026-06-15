@@ -1,15 +1,13 @@
+import socket
 from pathlib import Path
+
 from opsforge.config import load_config
 
 
 def validate_files():
     errors = []
 
-    required_files = [
-        "opsforge.yaml",
-        "Dockerfile",
-        "docker-compose.yml"
-    ]
+    required_files = ["opsforge.yaml", "Dockerfile", "docker-compose.yml"]
 
     for file in required_files:
         if not Path(file).exists():

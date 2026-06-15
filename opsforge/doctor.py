@@ -8,11 +8,7 @@ def check_tool(tool_name):
 
 def check_docker_running():
     try:
-        subprocess.run(
-            ["docker", "info"],
-            capture_output=True,
-            check=True
-        )
+        subprocess.run(["docker", "info"], capture_output=True, check=True)
         return True
     except Exception:
         return False

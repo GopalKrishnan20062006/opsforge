@@ -1,0 +1,23 @@
+{
+    "service_name": "sample-service",
+    "service_version": "1.0.0",
+    "docker_image": "sample-service",
+    "git_commit": "a1ddbb46048aa5ccac08c0341eef7b46bd6b3f07",
+    "git_branch": "main",
+    "timestamp": "2026-06-12T08:30:26.659838",
+    "artifacts": [
+        "Dockerfile",
+        "docker-compose.yml",
+        "release-metadata.json"
+    ],
+    "configuration": {
+        "port": 8000,
+        "health_endpoint": "/health"
+    },
+    "tests": {
+        "status": "not_implemented"
+    },
+    "lint": {
+        "status": "not_implemented"
+    }
+}

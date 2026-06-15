@@ -1,5 +1,7 @@
-import requests 
-import time 
+import time
+
+import requests
+
 
 def check_health(url):
     try:
@@ -12,6 +14,7 @@ def check_health(url):
 
     except Exception:
         return False
+
 
 def wait_for_health(url, retries=10, delay=3):
 

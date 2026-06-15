@@ -1,13 +1,20 @@
+import subprocess
+
 import typer
-from opsforge.doctor import check_tool, check_docker_running
-from opsforge.validator import ( validate_files, validate_config, validate_port)
+
 from opsforge.config import load_config
-from opsforge.docker_ops import build_image
-from opsforge.docker_ops import deploy_service
-from opsforge.docker_ops import get_status
-from opsforge.docker_ops import get_logs
-from opsforge.docker_ops import destroy_service
+from opsforge.docker_ops import (
+    build_image,
+    deploy_service,
+    destroy_service,
+    get_logs,
+    get_status,
+)
+from opsforge.doctor import check_docker_running, check_tool
 from opsforge.health import wait_for_health
+from opsforge.release import save_metadata
+from opsforge.validator import validate_config, validate_files, validate_port
+
 app = typer.Typer()
 
 
@@ -30,9 +37,11 @@ def doctor():
         print("✓ Docker daemon running")
     else:
         print("✗ Docker daemon not running")
+
+
 @app.command()
 def hello():
-	print("Hello")
+    print("Hello")
 
 
 @app.command()
@@ -59,6 +68,7 @@ def validate():
 
     print("✓ Validation successful")
 
+
 @app.command()
 def build():
 
@@ -84,6 +94,8 @@ def build():
         print(result.stderr)
 
         raise typer.Exit(code=1)
+
+
 @app.command()
 def deploy():
     result = deploy_service()
@@ -95,6 +107,7 @@ def deploy():
         print(result.stderr)
 
         raise typer.Exit(code=1)
+
 
 @app.command()
 def health():
@@ -126,6 +139,7 @@ def status():
 
     print(result.stdout)
 
+
 @app.command()
 def logs():
 
@@ -136,6 +150,7 @@ def logs():
         raise typer.Exit(code=1)
 
     print(result.stdout)
+
 
 @app.command()
 def destroy():
@@ -149,6 +164,25 @@ def destroy():
         print(result.stderr)
 
         raise typer.Exit(code=1)
+
+
+@app.command()
+def release():
+
+    metadata = save_metadata()
+
+    print("✓ Release metadata generated")
+
+    print(f"Version: {metadata['service_version']}")
+
+
+@app.command()
+def test():
+
+    result = subprocess.run(["pytest"], text=True)
+
+    raise typer.Exit(code=result.returncode)
+
 
 if __name__ == "__main__":
     app()

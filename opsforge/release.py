@@ -3,16 +3,35 @@ import subprocess
 from datetime import datetime
 
 from opsforge.config import load_config
+from opsforge.quality import get_lint_summary, get_test_summary
+
+
+def run_git_command(command):
+    try:
+        return subprocess.check_output(
+            command, text=True, stderr=subprocess.DEVNULL
+        ).strip()
+
+    except (
+        subprocess.CalledProcessError,
+        FileNotFoundError,
+        OSError,
+    ):
+        return None
 
 
 def get_git_commit():
-    return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+
+    commit = run_git_command(["git", "rev-parse", "HEAD"])
+
+    return commit or "Unavailable"
 
 
 def get_git_branch():
-    return subprocess.check_output(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True
-    ).strip()
+
+    branch = run_git_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+
+    return branch or "Unavailable"
 
 
 def get_timestamp():
@@ -30,13 +49,17 @@ def generate_metadata():
         "git_commit": get_git_commit(),
         "git_branch": get_git_branch(),
         "timestamp": get_timestamp(),
-        "artifacts": ["Dockerfile", "docker-compose.yml", "release-metadata.json"],
+        "artifacts": [
+            "Dockerfile",
+            "docker-compose.yml",
+            "release-metadata.json",
+        ],
         "configuration": {
             "port": config["deployment"]["port"],
             "health_endpoint": config["health"]["endpoint"],
         },
-        "tests": {"status": "not_implemented"},
-        "lint": {"status": "not_implemented"},
+        "tests": get_test_summary(),
+        "lint": get_lint_summary(),
     }
 
     return metadata

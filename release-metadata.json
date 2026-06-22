@@ -2,9 +2,9 @@
     "service_name": "sample-service",
     "service_version": "1.0.0",
     "docker_image": "sample-service",
-    "git_commit": "a1ddbb46048aa5ccac08c0341eef7b46bd6b3f07",
+    "git_commit": "d83ff65cbf1b5c7220d2848271b313ae44b9f401",
     "git_branch": "main",
-    "timestamp": "2026-06-12T08:30:26.659838",
+    "timestamp": "2026-06-22T11:51:42.487336",
     "artifacts": [
         "Dockerfile",
         "docker-compose.yml",
@@ -15,9 +15,13 @@
         "health_endpoint": "/health"
     },
     "tests": {
-        "status": "not_implemented"
+        "status": "passed",
+        "total": 39,
+        "passed": 39,
+        "failed": 0
     },
     "lint": {
-        "status": "not_implemented"
+        "status": "passed",
+        "tool": "ruff"
     }
 }

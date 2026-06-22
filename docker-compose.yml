@@ -1,5 +1,6 @@
 services:
   sample-service:
+    image: sample-service
     build: .
     container_name: sample-container
 

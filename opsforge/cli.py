@@ -2,18 +2,19 @@ import subprocess
 
 import typer
 
-from opsforge.config import load_config
+from opsforge.config import initialize_project, load_config
 from opsforge.docker_ops import (
     build_image,
     deploy_service,
     destroy_service,
+    get_container_status,
     get_logs,
+    get_recent_logs,
     get_status,
 )
-from opsforge.doctor import check_docker_running, check_tool
-from opsforge.health import wait_for_health
+from opsforge.doctor import check_docker_running, check_tool, run_preflight_checks
+from opsforge.health import check_health, wait_for_health
 from opsforge.release import save_metadata
-from opsforge.validator import validate_config, validate_files, validate_port
 
 app = typer.Typer()
 
@@ -40,23 +41,9 @@ def doctor():
 
 
 @app.command()
-def hello():
-    print("Hello")
-
-
-@app.command()
 def validate():
-    errors = []
 
-    errors.extend(validate_files())
-    errors.extend(validate_config())
-
-    try:
-        config = load_config()
-        port = config["deployment"]["port"]
-        errors.extend(validate_port(port))
-    except Exception:
-        pass
+    errors = run_preflight_checks()
 
     if errors:
         print("\nValidation Failed:\n")
@@ -72,10 +59,7 @@ def validate():
 @app.command()
 def build():
 
-    errors = []
-
-    errors.extend(validate_files())
-    errors.extend(validate_config())
+    errors = run_preflight_checks()
 
     if errors:
         print("Validation failed")
@@ -83,30 +67,65 @@ def build():
         for error in errors:
             print(f"✗ {error}")
 
-        raise typer.Exit(code=1)
+        raise typer.Exit(1)
 
     result = build_image()
 
     if result.returncode == 0:
         print("✓ Docker image built successfully")
     else:
-        print("✗ Build failed")
+        print("✗ Docker build failed")
         print(result.stderr)
-
         raise typer.Exit(code=1)
 
 
 @app.command()
 def deploy():
+
+    errors = run_preflight_checks()
+
+    if errors:
+        print("Validation failed")
+
+        for error in errors:
+            print(f"✗ {error}")
+
+        raise typer.Exit(1)
+
     result = deploy_service()
 
-    if result.returncode == 0:
-        print("✓ Service deployed")
-    else:
+    if result.returncode != 0:
         print("✗ Deployment failed")
         print(result.stderr)
+        raise typer.Exit(1)
 
-        raise typer.Exit(code=1)
+    config = load_config()
+
+    port = config["deployment"]["port"]
+    endpoint = config["health"]["endpoint"]
+    container_name = config["docker"]["container"]
+
+    url = f"http://localhost:{port}{endpoint}"
+
+    if not wait_for_health(url):
+        result = check_health(url)
+
+        print("✗ Health check failed.")
+
+        if result["status_code"]:
+            print(f"Last HTTP status: {result['status_code']}")
+
+        if result["error"]:
+            print(f"Last error: {result['error']}")
+
+        print(f"Container status: {get_container_status(container_name)}")
+
+        print("\nRecent logs:\n")
+        print(get_recent_logs(container_name))
+
+        raise typer.Exit(1)
+
+    print("✓ Deployment successful")
 
 
 @app.command()
@@ -182,6 +201,14 @@ def test():
     result = subprocess.run(["pytest"], text=True)
 
     raise typer.Exit(code=result.returncode)
+
+
+@app.command()
+def init():
+    if initialize_project():
+        print("✓ OpsForge project initialized.")
+    else:
+        print("Project already initialized.")
 
 
 if __name__ == "__main__":

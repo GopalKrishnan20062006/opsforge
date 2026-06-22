@@ -1,30 +1,64 @@
+from unittest.mock import Mock, patch
+
 import requests
 
-from opsforge.health import check_health
+from opsforge.health import check_health, wait_for_health
 
 
-def test_health_success(mocker):
+@patch("opsforge.health.requests.get")
+def test_check_health_success(mock_get):
+    response = Mock()
+    response.status_code = 200
+    mock_get.return_value = response
 
-    mock_response = mocker.Mock()
-    mock_response.status_code = 200
+    result = check_health("http://localhost:8000/health")
 
-    mocker.patch("requests.get", return_value=mock_response)
-
-    assert check_health("http://localhost:8000/health") is True
-
-
-def test_health_failure_status(mocker):
-
-    mock_response = mocker.Mock()
-    mock_response.status_code = 500
-
-    mocker.patch("requests.get", return_value=mock_response)
-
-    assert check_health("http://localhost:8000/health") is False
+    assert result["healthy"] is True
+    assert result["status_code"] == 200
+    assert result["error"] is None
 
 
-def test_health_exception(mocker):
+@patch("opsforge.health.requests.get")
+def test_check_health_failure(mock_get):
+    response = Mock()
+    response.status_code = 500
+    mock_get.return_value = response
 
-    mocker.patch("requests.get", side_effect=requests.exceptions.ConnectionError)
+    result = check_health("http://localhost:8000/health")
 
-    assert check_health("http://localhost:8000/health") is False
+    assert result["healthy"] is False
+    assert result["status_code"] == 500
+
+
+@patch("opsforge.health.requests.get")
+def test_check_health_timeout(mock_get):
+    mock_get.side_effect = requests.Timeout
+
+    result = check_health("http://localhost:8000/health")
+
+    assert result["healthy"] is False
+    assert result["error"] == "Health check timed out"
+
+
+@patch("opsforge.health.requests.get")
+def test_check_health_connection_error(mock_get):
+    mock_get.side_effect = requests.ConnectionError("Connection refused")
+
+    result = check_health("http://localhost:8000/health")
+
+    assert result["healthy"] is False
+    assert result["status_code"] is None
+
+
+@patch("opsforge.health.check_health")
+def test_wait_for_health_success(mock_check):
+    mock_check.return_value = {"healthy": True}
+
+    assert wait_for_health("http://localhost", retries=3, delay=0)
+
+
+@patch("opsforge.health.check_health")
+def test_wait_for_health_failure(mock_check):
+    mock_check.return_value = {"healthy": False}
+
+    assert not wait_for_health("http://localhost", retries=3, delay=0)

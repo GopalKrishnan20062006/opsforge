@@ -1,8 +1,8 @@
 .PHONY: setup check test lint format clean
 
 setup:
-	pip install -e .
-	pip install pytest pytest-mock ruff black pre-commit
+	pip install -e ".[dev]"
+	pre-commit install
 
 check:
 	ruff check .

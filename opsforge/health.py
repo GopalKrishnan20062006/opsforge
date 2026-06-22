@@ -5,22 +5,36 @@ import requests
 
 def check_health(url):
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=2)
 
-        if response.status_code == 200:
-            return True
+        return {
+            "healthy": response.status_code == 200,
+            "status_code": response.status_code,
+            "error": None,
+        }
 
-        return False
+    except requests.Timeout:
+        return {
+            "healthy": False,
+            "status_code": None,
+            "error": "Health check timed out",
+        }
 
-    except Exception:
-        return False
+    except requests.RequestException as e:
+        return {
+            "healthy": False,
+            "status_code": None,
+            "error": str(e),
+        }
 
 
 def wait_for_health(url, retries=10, delay=3):
 
-    for attempt in range(retries):
+    for _ in range(retries):
 
-        if check_health(url):
+        result = check_health(url)
+
+        if result["healthy"]:
             return True
 
         time.sleep(delay)

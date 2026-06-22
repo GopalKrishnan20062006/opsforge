@@ -2,18 +2,42 @@ from opsforge.validator import validate_port
 
 
 def test_valid_port():
-    errors = validate_port(8000)
+    config = {"deployment": {"port": 8000}}
+
+    errors = validate_port(config)
 
     assert errors == []
 
 
 def test_invalid_port_too_high():
-    errors = validate_port(70000)
+    config = {"deployment": {"port": 70000}}
 
-    assert len(errors) > 0
+    errors = validate_port(config)
+
+    assert errors == ["Port must be between 1 and 65535."]
 
 
 def test_invalid_port_negative():
-    errors = validate_port(-1)
+    config = {"deployment": {"port": -1}}
 
-    assert len(errors) > 0
+    errors = validate_port(config)
+
+    assert errors == ["Port must be between 1 and 65535."]
+
+
+def test_valid_port_lower_boundary():
+    config = {"deployment": {"port": 1}}
+
+    assert validate_port(config) == []
+
+
+def test_valid_port_upper_boundary():
+    config = {"deployment": {"port": 65535}}
+
+    assert validate_port(config) == []
+
+
+def test_non_integer_port():
+    config = {"deployment": {"port": "8000"}}
+
+    assert validate_port(config) == []
